@@ -1,7 +1,7 @@
 MONGO = (<<-MONGO) unless defined?(MONGO)
 require 'yaml'
 
-MongoMapper.setup(YAML.load_file(Padrino.root('config','database.yml')), PADRINO_ENV)
+MongoMapper.setup(YAML.load_file(Padrino.root('config','database.yml')), PADRINO_ENV, :logger => logger)
 MONGO
 
 YML = (<<-YML) unless defined?(YML)
@@ -27,8 +27,8 @@ def setup_orm
   require_dependencies 'mongo_mapper'
   require_dependencies 'bson_ext', :require => 'mongo'
   require_dependencies('SystemTimer', :require => 'system_timer') if RUBY_VERSION =~ /1\.8/ && (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby')
-  create_file("config/database.rb", MONGO.gsub(/!NAME!/, @app_name.underscore))
   create_file("config/database.yml", YML.gsub(/!NAME!/, @app_name.underscore))
+  create_file("config/database.rb", MONGO.gsub(/!NAME!/, @app_name.underscore))
 end
 
 MM_MODEL = (<<-MODEL) unless defined?(MM_MODEL)
