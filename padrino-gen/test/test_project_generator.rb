@@ -288,8 +288,8 @@ describe "ProjectGenerator" do
       assert_match(/applying.*?mongomapper.*?orm/, out)
       assert_match_in_file(/gem 'mongo_mapper'/, "#{@apptmp}/project.com/Gemfile")
       assert_match_in_file(/gem 'bson_ext'/, "#{@apptmp}/project.com/Gemfile")
-      assert_match_in_file(/MongoMapper.database/, "#{@apptmp}/project.com/config/database.rb")
-      assert_match_in_file(/project_com/, "#{@apptmp}/project.com/config/database.rb")
+      assert_match_in_file(/MongoMapper.setup/, "#{@apptmp}/project.com/config/database.rb")
+      assert_match_in_file(/database: project.com_development/, "#{@apptmp}/project.com/config/database.yml")
     end
 
     should "properly generate for mongoid" do

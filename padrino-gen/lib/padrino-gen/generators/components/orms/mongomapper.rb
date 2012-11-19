@@ -1,18 +1,34 @@
 MONGO = (<<-MONGO) unless defined?(MONGO)
-MongoMapper.connection = Mongo::Connection.new('localhost', nil, :logger => logger)
+require 'yaml'
 
-case Padrino.env
-  when :development then MongoMapper.database = '!NAME!_development'
-  when :production  then MongoMapper.database = '!NAME!_production'
-  when :test        then MongoMapper.database = '!NAME!_test'
-end
+MongoMapper.setup(YAML.load_file(Padrino.root('config','database.yml')), PADRINO_ENV)
 MONGO
+
+YML = (<<-YML) unless defined?(YML)
+defaults: &defaults
+  adapter: mongodb
+  host: localhost
+  port: 27017
+
+development:
+  <<: *defaults
+  database: !NAME!_development
+
+test:
+  <<: *defaults
+  database: !NAME!_test
+
+production:
+  <<: *defaults
+  database: !NAME!_production
+YML
 
 def setup_orm
   require_dependencies 'mongo_mapper'
   require_dependencies 'bson_ext', :require => 'mongo'
   require_dependencies('SystemTimer', :require => 'system_timer') if RUBY_VERSION =~ /1\.8/ && (!defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby')
   create_file("config/database.rb", MONGO.gsub(/!NAME!/, @app_name.underscore))
+  create_file("config/database.yml", YML.gsub(/!NAME!/, @app_name.underscore))
 end
 
 MM_MODEL = (<<-MODEL) unless defined?(MM_MODEL)
