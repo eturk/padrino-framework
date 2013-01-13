@@ -18,6 +18,7 @@ describe "ProjectGenerator" do
       assert_match_in_file(/class SampleProject < Padrino::Application/,"#{@apptmp}/sample_project/app/app.rb")
       assert_match_in_file(/Padrino.mount\('SampleProject'\).to\('\/'\)/,"#{@apptmp}/sample_project/config/apps.rb")
       assert_file_exists("#{@apptmp}/sample_project/config/boot.rb")
+      assert_file_exists("#{@apptmp}/sample_project/Rakefile")
       assert_file_exists("#{@apptmp}/sample_project/public/favicon.ico")
       assert_dir_exists("#{@apptmp}/sample_project/public/images")
       assert_dir_exists("#{@apptmp}/sample_project/public/javascripts")
@@ -32,9 +33,9 @@ describe "ProjectGenerator" do
       assert_match_in_file(/class ProjectCom < Padrino::Application/,  "#{@apptmp}/project.com/app/app.rb")
       assert_match_in_file(/Padrino.mount\('ProjectCom'\).to\('\/'\)/, "#{@apptmp}/project.com/config/apps.rb")
       capture_io { generate(:app, 'ws-dci-2011', "--root=#{@apptmp}/project.com") }
-      assert_file_exists("#{@apptmp}/project.com/wsdci2011")
-      assert_match_in_file(/class WsDci2011 < Padrino::Application/,  "#{@apptmp}/project.com/wsdci2011/app.rb")
-      assert_match_in_file(/Padrino.mount\('WsDci2011'\).to\('\/wsdci2011'\)/, "#{@apptmp}/project.com/config/apps.rb")
+      assert_file_exists("#{@apptmp}/project.com/ws_dci_2011")
+      assert_match_in_file(/class WsDci2011 < Padrino::Application/,  "#{@apptmp}/project.com/ws_dci_2011/app.rb")
+      assert_match_in_file(/Padrino.mount\('WsDci2011'\).to\('\/ws_dci_2011'\)/, "#{@apptmp}/project.com/config/apps.rb")
     end
 
     should "raise an Error when given invalid constant names" do
@@ -217,7 +218,7 @@ describe "ProjectGenerator" do
 
       should "properly generate mysql" do
         out, err = capture_io { generate(:project, 'sample_project', "--root=#{@apptmp}", '--orm=activerecord','--adapter=mysql') }
-        assert_match_in_file(/gem 'mysql'/, "#{@apptmp}/sample_project/Gemfile")
+        assert_match_in_file(/gem 'mysql', '~> 2.8'/, "#{@apptmp}/sample_project/Gemfile")
         assert_match_in_file(/sample_project_development/, "#{@apptmp}/sample_project/config/database.rb")
         assert_match_in_file(%r{:adapter   => 'mysql'}, "#{@apptmp}/sample_project/config/database.rb")
       end
@@ -296,14 +297,13 @@ describe "ProjectGenerator" do
       out, err = capture_io { generate(:project, 'project.com', "--root=#{@apptmp}", '--orm=mongoid', '--script=none') }
       assert_match(/applying.*?mongoid.*?orm/, out)
       if RUBY_VERSION >= '1.9'
-        assert_match_in_file(/gem 'mongoid', '>=3.0'/, "#{@apptmp}/project.com/Gemfile")
-        assert_match_in_file(/Mongoid::Config.sessions/, "#{@apptmp}/project.com/config/database.rb")
+        assert_match_in_file(/gem 'mongoid', '~>3.0.0'/, "#{@apptmp}/project.com/Gemfile")
+        assert_match_in_file(/Mongoid.load!/, "#{@apptmp}/project.com/config/database.rb")
+        assert_match_in_file(/production:/, "#{@apptmp}/project.com/config/database.yml")
       else
         assert_match_in_file(/gem 'mongoid', '~>2.0'/, "#{@apptmp}/project.com/Gemfile")
         assert_match_in_file(/Mongoid.database/, "#{@apptmp}/project.com/config/database.rb")
       end
-      assert_match_in_file(/gem 'bson_ext'/, "#{@apptmp}/project.com/Gemfile")
-      assert_match_in_file(/project_com/, "#{@apptmp}/project.com/config/database.rb")
     end
 
 
