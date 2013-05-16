@@ -24,9 +24,9 @@ module Padrino
         end
 
         # f.label :username, :caption => "Nickname"
-        def label(field, options={})
+        def label(field, options={}, &block)
           options.reverse_merge!(:caption => "#{field_human_name(field)}: ")
-          @template.label_tag(field_id(field), options)
+          @template.label_tag(field_id(field), options, &block)
         end
 
         # f.hidden_field :session_id, :value => "45"
@@ -122,7 +122,7 @@ module Padrino
 
         # f.check_box :remember_me, :value => 'true', :uncheck_value => '0'
         def check_box(field, options={})
-          html =""
+          html = ActiveSupport::SafeBuffer.new
           unchecked_value = options.delete(:uncheck_value) || '0'
           options.reverse_merge!(:id => field_id(field), :value => '1')
           options.reverse_merge!(:checked => true) if values_matches_field?(field, options[:value])
@@ -166,7 +166,11 @@ module Padrino
           result = nested_objects.each_with_index.map do |child_instance, index|
             nested_options[:index] = include_index ? index : nil
             @template.fields_for(child_instance,  { :nested => nested_options }, &block)
-          end.join("\n")
+          end.join("\n").html_safe
+        end
+
+        def csrf_token_field
+          @template.csrf_token_field
         end
 
         protected
@@ -197,17 +201,8 @@ module Padrino
           # field_name(:number) => "user[telephone_attributes][number]"
           # field_name(:street) => "user[addresses_attributes][0][street]"
           def field_name(field=nil)
-            result = []
-            if root_form?
-              result << object_model_name
-            elsif nested_form?
-              parent_form = @options[:nested][:parent]
-              attributes_name = "#{@options[:nested][:association]}_attributes"
-              nested_index = @options[:nested][:index]
-              fragment = [parent_form.field_name, "[#{attributes_name}", "]"]
-              fragment.insert(2, "][#{nested_index}") if nested_index
-              result << fragment
-            end
+            result = field_result
+            result << field_name_fragment if nested_form?
             result << "[#{field}]" unless field.blank?
             result.flatten.join
           end
@@ -218,17 +213,8 @@ module Padrino
           # field_name(:number) => "user_telephone_attributes_number"
           # field_name(:street) => "user_addresses_attributes_0_street"
           def field_id(field=nil, value=nil)
-            result = []
-            if root_form?
-              result << object_model_name
-            elsif nested_form?
-              parent_form = @options[:nested][:parent]
-              attributes_name = "#{@options[:nested][:association]}_attributes"
-              nested_index = @options[:nested][:index]
-              fragment = [parent_form.field_id, "_#{attributes_name}"]
-              fragment.push("_#{nested_index}") if nested_index
-              result << fragment
-            end
+            result = field_result
+            result << field_id_fragment if nested_form?
             result << "_#{field}" unless field.blank?
             result << "_#{value}" unless value.blank?
             result.flatten.join
@@ -285,12 +271,38 @@ module Padrino
             else
               []
             end
-            variants.inject('') do |html, variant|
+            variants.inject(''.html_safe) do |html, variant|
               variant[2] = "#{field_id(field)}_#{variant[1]}"
               html << @template.label_tag("#{field_name(field)}[]", :for => variant[2], :caption => "#{yield(variant)} #{variant[0]}")
             end
           end
 
+        private
+        def field_result
+          result = []
+          result << object_model_name if root_form?
+          result
+        end
+
+        def field_name_fragment
+          fragment = [result_options[:parent_form].field_name, "[#{result_options[:attributes_name]}", "]"]
+          fragment.insert(2, "][#{result_options[:nested_index]}") if result_options[:nested_index]
+          fragment
+        end
+
+        def field_id_fragment
+          fragment = [result_options[:parent_form].field_id, "_#{result_options[:attributes_name]}"]
+          fragment.push("_#{result_options[:nested_index]}") if result_options[:nested_index]
+          fragment
+        end
+
+        def result_options
+          {
+            :parent_form  => @options[:nested][:parent],
+            :nested_index => @options[:nested][:index],
+            :attributes_name => "#{@options[:nested][:association]}_attributes"
+          }
+        end
       end # AbstractFormBuilder
     end # FormBuilder
   end # Helpers

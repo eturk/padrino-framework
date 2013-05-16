@@ -103,6 +103,7 @@ describe "FormBuilder" do
       assert_have_selector :form, :action => '/demo', :id => 'demo'
       assert_have_selector :form, :action => '/another_demo', :id => 'demo2', :method => 'get'
       assert_have_selector :form, :action => '/third_demo', :id => 'demo3', :method => 'get'
+      assert_have_selector :input, :name => 'authenticity_token'
     end
 
     should "display correct form in erb" do
@@ -110,6 +111,7 @@ describe "FormBuilder" do
       assert_have_selector :form, :action => '/demo', :id => 'demo'
       assert_have_selector :form, :action => '/another_demo', :id => 'demo2', :method => 'get'
       assert_have_selector :form, :action => '/third_demo', :id => 'demo3', :method => 'get'
+      assert_have_selector :input, :name => 'authenticity_token'
     end
 
     should "display correct form in slim" do
@@ -117,6 +119,7 @@ describe "FormBuilder" do
       assert_have_selector :form, :action => '/demo', :id => 'demo'
       assert_have_selector :form, :action => '/another_demo', :id => 'demo2', :method => 'get'
       assert_have_selector :form, :action => '/third_demo', :id => 'demo3', :method => 'get'
+      assert_have_selector :input, :name => 'authenticity_token'
     end
 
     should "have a class of 'invalid' for fields with errors" do
@@ -251,6 +254,12 @@ describe "FormBuilder" do
     should "display correct label html" do
       actual_html = standard_builder.label(:first_name, :class => 'large', :caption => "F. Name: ")
       assert_has_tag('label', :class => 'large', :for => 'user_first_name', :content => "F. Name: ") { actual_html }
+    end
+
+    should "set specific content inside the label if a block was provided" do
+      actual_html = standard_builder.label(:admin, :class => 'large') { input_tag :checkbox }
+      assert_has_tag('label', :class => 'large', :for => 'user_admin', :content => "Admin: ") { actual_html }
+      assert_has_tag('label input[type=checkbox]') { actual_html }
     end
 
     should "display correct label in haml" do

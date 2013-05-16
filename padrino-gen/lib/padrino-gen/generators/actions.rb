@@ -227,6 +227,36 @@ module Padrino
         fields.map! { |field| field =~ /:/ ? field : "#{field}:string" }
       end
 
+      # Returns the namespace for the project.
+      #
+      # @param [String] app
+      #   folder name of application.
+      #
+      # @return [String] namespace for application.
+      #
+      # @example
+      #   fetch_project_name
+      #
+       # @api public
+      def fetch_project_name(app='app')
+        app_path = destination_root(app, 'app.rb')
+        @project_name = fetch_component_choice(:namespace) if @project_name.empty?
+        @project_name ||= begin
+          say "Autodetecting project namespace using folder name.", :red
+          say ""
+          detected_namespace = File.basename(destination_root('.')).gsub(/\W/, '_').camelize
+          say(<<-WARNING, :red)
+From v0.11.0 on, applications should have a `namespace` setting
+in their .components file. Please include a line like the following
+in your .components file:
+WARNING
+          say "\t:namespace: #{detected_namespace}", :yellow
+          say ""
+
+          detected_namespace
+        end
+      end
+
       # Returns the app_name for the application at root.
       #
       # @param [String] app
@@ -299,7 +329,7 @@ module Padrino
         inject_into_file('config/boot.rb', "  #{include_text}\n", :after => "Padrino.#{where} do\n")
       end
 
-      # Inserts a middleware inside app.rb..
+      # Inserts a middleware inside app.rb.
       #
       # @param [String] include_text
       #   Text to include into hooks in boot.rb.
@@ -310,7 +340,7 @@ module Padrino
       # @api public
       def insert_middleware(include_text, app=nil)
         name = app || (options[:name].present? ? @app_name.downcase : 'app')
-        inject_into_file("#{name}/app.rb", "  use #{include_text}\n", :after => "Padrino::Application\n")
+        inject_into_file("#{name}/app.rb", "    use #{include_text}\n", :after => "Padrino::Application\n")
       end
 
       # Registers and creates initializer.
@@ -327,7 +357,7 @@ module Padrino
       # @api public
       def initializer(name, data=nil)
         @_init_name, @_init_data = name, data
-        register = data.present? ? "  register #{name.to_s.underscore.camelize}Initializer\n" : "  register #{name}\n"
+        register = data.present? ? "    register #{name.to_s.underscore.camelize}Initializer\n" : "    register #{name}\n"
         inject_into_file destination_root("/app/app.rb"), register, :after => "Padrino::Application\n"
         template "templates/initializer.rb.tt", destination_root("/lib/#{name}_init.rb") if data.present?
       end
@@ -408,7 +438,7 @@ module Padrino
           say "Unable to locate '#{app.underscore.camelize}' application        "
           say "================================================================="
           say
-          # raise SystemExit
+          raise SystemExit
         end
       end
 

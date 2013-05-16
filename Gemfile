@@ -1,6 +1,10 @@
 require File.expand_path("../padrino-core/lib/padrino-core/version.rb", __FILE__)
 
-source :rubygems
+source 'https://rubygems.org'
+
+if ENV["AS_VERSION"]
+  gem 'activesupport', "~> #{ENV['AS_VERSION']}"
+end
 
 group :db do
   gem "dm-core",           ">=1.2"
@@ -25,7 +29,7 @@ group :development do
   gem "webrat",    ">= 0.5.1"
   gem "haml",      ">= 2.2.22"
   gem "erubis",    ">= 2.7.0"
-  gem "slim",      ">= 0.9.2"
+  gem "slim",      ">= 1.3.0"
   gem "uuid",      ">= 2.3.1"
   gem "builder",   ">= 2.1.2"
   gem "bcrypt-ruby", :require => "bcrypt"
@@ -38,7 +42,7 @@ group :development do
     gem "jruby-openssl"
   end
   gem "mocha",    ">= 0.10.0"
-  gem "minitest", ">= 2.6.0"
+  gem "minitest", "~> 4.0"
   gem "lumberjack"
 end
 
